@@ -444,7 +444,7 @@ class coreGen():
         f.write(self.lsCellCards)
         f.write(genfuncs.make_cs(5))
         f.write(self.coreWaterCells)
-        if self.simOptions["Core Only"]:
+        if not self.simOptions["Core Only"]:
             f.write(genfuncs.make_cs(5))
             f.write(self.housingCard)
         f.write(genfuncs.make_cs(5))

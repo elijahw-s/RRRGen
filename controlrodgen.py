@@ -68,9 +68,9 @@ class controlRodGen():
                              'c\n' \
                              'c k/z surfaces\n' \
                              'c\n' \
-                            f'813301   k/z   -6.91134   -3.99034   {"{:.4f}".format(69.51676 + self.safeMovement)}   0.1877777777   $ upper beveling\n' \
-                            f'813302   k/z   -6.91134   -3.99034   {"{:.4f}".format(16.55385 + self.safeMovement)}   0.66015625     $ lower outer beveling\n' \
-                            f'813303   k/z   -6.91134   -3.99034   {"{:.4f}".format(17.5425 + self.safeMovement)}   5.0625         $ lower inner beveling\n' \
+                            f'813301   k/z   6.91134   -3.99034   {"{:.4f}".format(69.51676 + self.safeMovement)}   0.1877777777   $ upper beveling\n' \
+                            f'813302   k/z   6.91134   -3.99034   {"{:.4f}".format(16.55385 + self.safeMovement)}   0.66015625     $ lower outer beveling\n' \
+                            f'813303   k/z   6.91134   -3.99034   {"{:.4f}".format(17.5425 + self.safeMovement)}   5.0625         $ lower inner beveling\n' \
                              'c\n' \
                              'c\n' \
                              'c End of Safe Rod'

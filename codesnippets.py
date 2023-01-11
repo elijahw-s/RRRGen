@@ -468,6 +468,8 @@ modelSurfacesFull = 'c -----------------------------------\n' \
                 '192301  pz   679.675  $ Top of model\n' \
                 '192399  pz  -121.965  $ Bottom of model\n' \
                 'c\n' \
+                '191301  cz   150  $ Outer limit of model\n' \
+                'c\n' \
                 '192350  pz  66.8336  $ temporary rabbit fix\n' \
                 'c\n' \
                 '20  cz  1.914525 $ Generic fuel supercell\n'

@@ -194,7 +194,7 @@ class waterGen():
                                'c\n' \
                               f'13304  102   -{self.H2ODensity}   122310 {"-192301" if self.coreOnly else "-130002"}  121390 -121305     {self.P_imp}   tmp={self.tmp} $ Water above LS assy\n' \
                               f'13305  102   -{self.H2ODensity}   122306 {"-192301" if self.coreOnly else "-130002"}  121305 -121308     {self.P_imp}   tmp={self.tmp} $ Water above outer section of reflector assy\n' \
-                              f'13306  102   -{self.H2ODensity}   {"192399" if self.coreOnly else "130001"} {"-192301" if self.coreOnly else "-130002"}  121308 -{"130003" if self.coreOnly else "191301"}\n' \
+                              f'13306  102   -{self.H2ODensity}   {"192399" if self.coreOnly else "130001"} {"-192301" if self.coreOnly else "-130002"}  121308 -{"191301" if self.coreOnly else "130003"}\n' \
                                '                   (150001:-150002:150011)\n' \
                                '                   (150001:-150002:150021)\n' \
                                '                   (150001:-150002:150031)\n' \
@@ -593,7 +593,7 @@ class centralThimbleGen():
                        f'14003  103   -{"{:.2f}".format(self.alDensity)}        142301 -142302 -111300           {self.P_imp}                    $ Central thimble bottom cap\n' \
                        f'14004  102   -{self.H2ODensity}    142301 -112304  111300 -111397   {self.P_imp}   tmp={self.tmp} $ Water around central thimble below upper grid plate\n' \
                        f'14005  102   -{self.H2ODensity}    112305 {"-192301" if self.coreOnly else "-130002"}  111300 -111397   {self.P_imp}   tmp={self.tmp} $ Water around central thimble above upper grid plate\n' \
-                       f'14006  102   -{self.H2ODensity}    {"192399" if self.coreOnly else "130001"}-142301 -111397           {self.P_imp}   tmp={self.tmp} $ Water below central thimble\n'
+                       f'14006  102   -{self.H2ODensity}    {"192399" if self.coreOnly else "130001"} -142301 -111397           {self.P_imp}   tmp={self.tmp} $ Water below central thimble\n'
 
 class fluxWires():
     def __init__(self, h2o_density = None,
