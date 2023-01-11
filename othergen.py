@@ -788,9 +788,9 @@ class voidCells():
 
     def getVoidCells(self):
         if self.coreOnly:
-            self.voidCells += f'10001  0  -192399                  {self.P_imp}  $ Void below model\n' \
-                              f'10002  0   192399 -192301 -191301  {self.P_imp}  $ Void around model\n' \
-                              f'10003  0   192301                  {self.P_imp}  $ Void above model\n'
+            self.voidCells += f'10001  0  -192399                 {self.P_imp}  $ Void below model\n' \
+                              f'10002  0   192399 -192301 191301  {self.P_imp}  $ Void around model\n' \
+                              f'10003  0   192301                 {self.P_imp}  $ Void above model\n'
         else:
             self.voidCells += f'10001  0  -192399                               {self.P_imp}  $ Void below model\n' \
                               f'10002  0   192399 -192301 132201 132202 132203  {self.P_imp}  $ Void around model\n' \
