@@ -1,6 +1,6 @@
 import re
 import pandas as pd
-import fuelgendicts
+import gendicts
 import genfuncs
 from scipy import constants
 
@@ -34,19 +34,19 @@ class fuelGen():
         self.matLibs = matLibs          #material ids for a given fuel temp
         for mat in self.massGrams.keys():      #get atom numbers for everything in the massGrams
             try:
-                self.numAtoms[mat] = self.massGrams[mat] / fuelgendicts.MOLARS[mat] * constants.Avogadro
+                self.numAtoms[mat] = self.massGrams[mat] / gendicts.MOLARS[mat] * constants.Avogadro
             except:
                 pass
         if self.add_samarium:
             self.numAtoms['SM149'] = self.numAtoms['U235'] / 6880 # from Eq. 3 in U.S. Patent 2843539 
-            self.massGrams['SM149'] = self.numAtoms['SM149'] * fuelgendicts.MOLARS['SM149'] / constants.Avogadro
+            self.massGrams['SM149'] = self.numAtoms['SM149'] * gendicts.MOLARS['SM149'] / constants.Avogadro
         
 
         self.massGrams['ZRH'] = (self.massGrams['U'] + self.massGrams['PU239']) / 8.5 * (100-8.5) # assume rest of FE mass is ZrH, do not factor in Sm-149 bc not present in fresh fuel construction
-        self.numAtoms['ZR'] = self.massGrams['ZRH']/(fuelgendicts.MOLARS['ZR']/constants.Avogadro + self.HZR_Ratio*fuelgendicts.MOLARS['H']/constants.Avogadro)
+        self.numAtoms['ZR'] = self.massGrams['ZRH']/(gendicts.MOLARS['ZR']/constants.Avogadro + self.HZR_Ratio*gendicts.MOLARS['H']/constants.Avogadro)
         self.numAtoms['H'] = self.HZR_Ratio * self.numAtoms['ZR']   # uses atom ratio to determine number of hydrogen atoms
-        self.massGrams['ZR'] = self.numAtoms['ZR'] * fuelgendicts.MOLARS['ZR'] / constants.Avogadro
-        self.massGrams['H'] = self.numAtoms['H'] * fuelgendicts.MOLARS['H'] / constants.Avogadro
+        self.massGrams['ZR'] = self.numAtoms['ZR'] * gendicts.MOLARS['ZR'] / constants.Avogadro
+        self.massGrams['H'] = self.numAtoms['H'] * gendicts.MOLARS['H'] / constants.Avogadro
 
         self.fuelDensity = (self.massGrams['U'] + self.massGrams['PU239'] + self.massGrams['ZRH'] + (self.massGrams['SM149'] if self.add_samarium else 0))/ 387.7713768
 
@@ -69,13 +69,13 @@ class fuelGen():
         Finds which materials are used for the mat card, accounts for inputted temperature.
         '''
         self.matLibs = {'U235':None, 'U238':None, 'PU239':None, 'SM149':None, 'ZR':None, 'H':None, 'O':None, 'ZRH':None, 'HZR':None, 'H2O':None}
-        matList = [[None, fuelgendicts.U235_TEMPS_K_XS_DICT, 'U235'], 
-                    [None, fuelgendicts.U238_TEMPS_K_XS_DICT, 'U238'],
-                    [None, fuelgendicts.PU239_TEMPS_K_XS_DICT, 'PU239'],
-                    [None, fuelgendicts.SM149_TEMPS_K_XS_DICT, 'SM149'],
-                    [None, fuelgendicts.ZR_TEMPS_K_XS_DICT, 'ZR'],
-                    [None, fuelgendicts.H_TEMPS_K_XS_DICT, 'H'], # used in fuel mats, NOT when interpolating h mats
-                    [None, fuelgendicts.O_TEMPS_K_XS_DICT, 'O'],]  # used in light water mat, EVEN WHEN interpolating h mats
+        matList = [[None, gendicts.U235_TEMPS_K_XS_DICT, 'U235'], 
+                    [None, gendicts.U238_TEMPS_K_XS_DICT, 'U238'],
+                    [None, gendicts.PU239_TEMPS_K_XS_DICT, 'PU239'],
+                    [None, gendicts.SM149_TEMPS_K_XS_DICT, 'SM149'],
+                    [None, gendicts.ZR_TEMPS_K_XS_DICT, 'ZR'],
+                    [None, gendicts.H_TEMPS_K_XS_DICT, 'H'], # used in fuel mats, NOT when interpolating h mats
+                    [None, gendicts.O_TEMPS_K_XS_DICT, 'O'],]  # used in light water mat, EVEN WHEN interpolating h mats
         for elem in matList:
             try:
                 elem[0] = elem[0][self.uzrh_temp_K]
@@ -89,15 +89,15 @@ class fuelGen():
 
     def findMtLibs(self):
         try:
-            self.matLibs['H2O'] = fuelgendicts.H2O_TEMPS_K_SAB_DICT[self.h2o_temp_K]
+            self.matLibs['H2O'] = gendicts.H2O_TEMPS_K_SAB_DICT[self.h2o_temp_K]
         except:
-            closest_temp_K = genfuncs.find_closest_value(self.h2o_temp_K,list(fuelgendicts.H2O_TEMPS_K_SAB_DICT.keys()))
-            self.matLibs['H2O'] = fuelgendicts.H2O_TEMPS_K_SAB_DICT[closest_temp_K]
+            closest_temp_K = genfuncs.find_closest_value(self.h2o_temp_K,list(gendicts.H2O_TEMPS_K_SAB_DICT.keys()))
+            self.matLibs['H2O'] = gendicts.H2O_TEMPS_K_SAB_DICT[closest_temp_K]
             # print(f"\n   comment. light water scattering S(a,B) data at {self.h2o_temp_K} K does not exist")
                 # print(f"   comment.   using closest available S(a,B) data at temperature: {closest_temp_K} K")
 
-        mt_list = [[None, fuelgendicts.ZR_H_TEMPS_K_SAB_DICT, 'zr_h'],
-                   [None, fuelgendicts.H_ZR_TEMPS_K_SAB_DICT, 'h_zr']]
+        mt_list = [[None, gendicts.ZR_H_TEMPS_K_SAB_DICT, 'zr_h'],
+                   [None, gendicts.H_ZR_TEMPS_K_SAB_DICT, 'h_zr']]
 
         for i in range(0,len(mt_list)):
             try:
@@ -147,9 +147,11 @@ class fuelGen():
             1001.00c {# of H atoms} $ H {mass in grams} g
         mt{fuel id} h-zrh.40t zr-zrh.40t
         '''
-        self.matCard += f'm{self.id} $ Position {self.loc}\n'  # fuel id number
+        self.matCard += f'c Position {self.loc}\n'  # fuel id number
+        firstLine = True
         for mat in self.numAtoms.keys():    # iterates through materials that have atom numbers
-            self.matCard += f'   {self.matLibs[mat]} {"{:.6e}".format(self.numAtoms[mat])} $ {mat} {"{:.6f}".format(self.massGrams[mat])} g\n'   # creates a material line for each material 
+            self.matCard += f'{"m" + str(self.id) if firstLine else " "*len("m" + str(self.id))}    {self.matLibs[mat]} {"{:.6e}".format(self.numAtoms[mat])} $ {mat} {"{:.6f}".format(self.massGrams[mat])} g\n'   # creates a material line for each material 
+            firstLine = False
         self.matCard += f'mt{self.id} {self.matLibs["HZR"]} {self.matLibs["ZRH"]}\n' # adds Zr materials
         self.matCard += 'c\nc'   # more comment lines after
 

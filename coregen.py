@@ -1,8 +1,10 @@
 import fuelgen
 import genfuncs
+import gendicts
 import controlrodgen
 import othergen
 import codesnippets
+import tallies
 import pandas as pd
 import numpy as np
 import xlrd, openpyxl
@@ -11,10 +13,12 @@ import os
 
 
 class coreGen():
-    def __init__(self, filepath, df, fueldf, row = 0):
+    def __init__(self, filepath, df, fueldf, tallydf, settingsdf, row = 0):
         self.filePath = filepath
         self.df = df
         self.fueldf = fueldf
+        self.tallydf = tallydf
+        self.settingsdf = settingsdf
         self.row = row
         self.simOptions = None
         self.fuelElements = {}
@@ -33,6 +37,8 @@ class coreGen():
         self.rabbit = None
         self.neutronDetectors = None
         self.void = None
+        self.tallyOptions = None
+        self.tallies = {}
         self.coreLayout = {
             "B" : {key:None for key in range(1,7)},     # dictionary for the b ring
             "C" : {key:None for key in range(1,13)},    # dictionary for the c ring
@@ -63,7 +69,9 @@ class coreGen():
         self.housingCard = ''
         self.rabbitCells = ''
         self.ndCells = ''
+        self.tallycards = ''
         self.simOptsCard = 'c Settings:\n'
+        self.tallyOptsCard = 'c Tallies:\n'
         
         self.averageDensity = 0
 
@@ -87,6 +95,8 @@ class coreGen():
         self.getFluxWires()
         self.getPoolHousing()
         self.getRabbit()
+        self.getTallyOptions()
+        self.getTallies()
         self.getSimOptionsCard()
 
     def getSimOptions(self):
@@ -102,11 +112,11 @@ class coreGen():
                            "H2O_Void_Percent" : row["H2O Void Percent"] if pd.notnull(row["H2O Void Percent"]) else 0,  # this is normally 0
                            "Graphite" : row["Graphite Core Pos"].split(","),        # makes a list of graphite element core positions
                            "AmBe" : row["AmBe Core Pos"] if pd.notnull(row["AmBe Core Pos"]) else print("   fatal. no AmBe source"),    # sets location for AmBe source
-                           "Ir" : row["Ir Core Pos"] if pd.notnull(row["Ir Core Pos"]) else print("   warning. no Ir source"),      # sets location for Ir source, not a fatal generation error because of possible source removal
+                           "Ir" : row["Ir Core Pos"] if pd.notnull(row["Ir Core Pos"]) else None,      # sets location for Ir source, not a fatal generation error because of possible source removal
                            "Shim" : row["Shim Rod"] if pd.notnull(row["Shim Rod"]) else print("   fatal. no shim rod height"),  # sets shim rod height as a percent
                            "Safe" : row["Safe Rod"] if pd.notnull(row["Safe Rod"]) else print("   fatal. no safe rod height"),  # same for safe rod
                            "Reg" : row["Reg Rod"] if pd.notnull(row["Reg Rod"]) else print("   fatal. no reg rod height"),      # safe for reg rod
-                           "P_Importance" : row["Particle Transports"].split(","),      # makes a list of particle transports
+                           "P_Importance" : row["Particle Transports"].replace(" ","").split(","),      # makes a list of particle transports
                            "CT_Open" : True if row["Beam Open"] == "Yes" else False,        # sets bool for if the beam is open (replaces beam water with nitrogen)
                            "Rabbit_In" : True if row["Rabbit in Core"] == "Yes" else False,  # sets bool for if the rabbit is in the core (replaces some of the air cells with plastic)
                            "Core Only" : True if row["Scale"] == "Core" else False
@@ -159,6 +169,7 @@ class coreGen():
                 if self.coreLayout[ring][pos] == None:
                     self.coreLayout[ring][pos] = 18     # 18 is a water element universe so this makes sure there aren't voids in the 
                     print(f"   warning. no element in position {ring}{pos} --- sim {self.row + 1}")
+        # print(self.fuelElements)
 
     def getAverageDensity(self):
         elementCount = 0
@@ -228,8 +239,9 @@ class coreGen():
         self.coreSources += genfuncs.make_cs(3)
         self.coreSources += self.sources.AmBe
         self.coreSources += genfuncs.make_cs(3)
-        self.coreSources += self.sources.Ir
-        self.coreSources += genfuncs.make_cs(3)
+        if self.simOptions["Ir"]:
+            self.coreSources += self.sources.Ir
+            self.coreSources += genfuncs.make_cs(3)
 
         self.coreSources += 'c -----------------------------------\n' \
                             'c --------- End Core Sources --------\n' \
@@ -390,6 +402,40 @@ class coreGen():
         self.ndCells += genfuncs.make_cs(3)
         self.ndCells += self.neutronDetectors.ndCells
 
+    def getTallyOptions(self):
+        tallyDict = self.tallydf.to_dict('index') # this splits the tallydf dataframe on its rows
+        for tally in tallyDict.values():
+            if tally["Tally Area"] == "Lazy Susan":
+                for position in tally["Lazy Susan Positions"].split(","):
+                    self.tallies[gendicts.TALLY_NUMBERS[tally["Tally Area"]] + int(position)*1000] = tallies.tally(
+                                                  tally["Particles"],
+                                                  tally["Power (W)"],
+                                                  tally["Tally Area"],
+                                                  self.settingsdf,
+                                                  tally["Energy Bins"],
+                                                  int(position)
+            )
+            else:
+                self.tallies[gendicts.TALLY_NUMBERS[tally["Tally Area"]]] = tallies.tally(
+                                                    tally["Particles"],
+                                                    tally["Power (W)"],
+                                                    tally["Tally Area"],
+                                                    self.settingsdf,
+                                                    tally["Energy Bins"],
+                                                    LSPosition=None
+                )
+
+    def getTallies(self):
+        self.tallycards += 'c -----------------------------------\n' \
+                           'c ----------- Tally Cards -----------\n' \
+                           'c -----------------------------------\n'
+        self.tallycards += genfuncs.make_cs(3)
+        for tally in self.tallies.keys():
+            self.tallycards += self.tallies[tally].card
+            self.tallycards += genfuncs.make_cs(2)
+            self.tallyOptsCard += self.tallies[tally].optsCard
+        # print(self.tallycards)
+
     def writeFile(self):
         cellCardOpener = "c ----------------------------------------------------------------------------------------------------\n" \
                          "c -------------------------------------------- CELL CARDS --------------------------------------------\n" \
@@ -423,6 +469,9 @@ class coreGen():
         f.write(genfuncs.make_cs(10))
         f.write(self.simOptsCard)
         f.write(genfuncs.make_cs(10))
+        if self.tallies != {}:
+            f.write(self.tallyOptsCard)
+            f.write(genfuncs.make_cs(10))
         
         '''
         Writing Cell Cards
@@ -524,14 +573,18 @@ class coreGen():
         f.write(genfuncs.make_cs(3))
         f.write(codesnippets.zirconiumMat)
         f.write(genfuncs.make_cs(3))
-        f.write(codesnippets.concreteMat)
-        f.write(genfuncs.make_cs(3))
+        if not self.simOptions["Core Only"]:
+            f.write(codesnippets.concreteMat)
+            f.write(genfuncs.make_cs(3))
         if self.simOptions["Rabbit_In"]:
             f.write(codesnippets.plasticMat)
             f.write(genfuncs.make_cs(3))
         f.write(genfuncs.make_cs(2))
         f.write(self.fuelMatCards)
         f.write(genfuncs.make_cs(5))
+        if self.tallies != {}:
+            f.write(self.tallycards)
+            f.write(genfuncs.make_cs(5))
         f.write(sourceDefOpener)
         f.write(genfuncs.make_cs(3))
         f.write(codesnippets.sourceDef)
@@ -553,9 +606,13 @@ def run(filePath):
     simdf = pd.read_excel(filePath, sheet_name="Setup", usecols="A:R", engine="openpyxl")
     simdf.dropna(subset="Core Number", inplace=True) #removes rows that contain empty values
     fueldf = pd.read_excel(filePath, sheet_name="Fuel Info", usecols="A:Y", engine="openpyxl")
+    tallydf = pd.read_excel(filePath, sheet_name="Tallies", usecols="A:G", engine="openpyxl")
+    tallydf.dropna(subset="Power (W)", inplace=True) #removes rows that contain empty values
+    settingsdf = pd.read_excel(filePath, sheet_name="Settings", usecols="B:F", engine="openpyxl")
+    # print(settingsdf)
     cores = {}
     for row in range(len(simdf.index)):
-        cores[row] = coreGen(filePath, simdf, fueldf, row)
+        cores[row] = coreGen(filePath, simdf, fueldf, tallydf, settingsdf, row)
         cores[row].writeFile()
             
 
